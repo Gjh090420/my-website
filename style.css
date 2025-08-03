@@ -1,0 +1,566 @@
+/* 全局变量和基础设置 */
+:root {
+    /* 浅色模式颜色 */
+    --bg-color-light: #f4f4f4;
+    --text-color-light: #121212;
+    --card-bg-color-light: color(display-p3 1 1 1);
+    --card-bg-color-rgb: 255, 255, 255;
+    --border-color-light: rgba(0, 0, 0, 0.1);
+    --input-bg-color-light: rgba(255, 255, 255, 0.5);
+    --button-bg-color-light: #222222;
+    --button-text-color-light: #ffffff;
+    --button-hover-bg-light: #444444;
+    --text-color-rgb: 18, 18, 18;
+
+    /* 深色模式颜色 */
+    --bg-color-dark: #121212;
+    --text-color-dark: #e0e0e0;
+    --card-bg-color-dark: #1e1e1e;
+    --card-bg-color-rgb: 30, 30, 30;
+    --border-color-dark: rgba(255, 255, 255, 0.1);
+    --input-bg-color-dark: rgba(30, 30, 30, 0.5);
+    --button-bg-color-dark: #f0f0f0;
+    --button-text-color-dark: #121212;
+    --button-hover-bg-dark: #cccccc;
+    --text-color-rgb: 224, 224, 224;
+}
+
+/* 根据 data-theme 属性应用颜色 */
+html[data-theme='light'] {
+    --bg-color: var(--bg-color-light);
+    --text-color: var(--text-color-light);
+    --card-bg-color: var(--card-bg-color-light);
+    --border-color: var(--border-color-light);
+    --input-bg-color: var(--input-bg-color-light);
+    --button-bg-color: var(--button-bg-color-light);
+    --button-text-color: var(--button-text-color-light);
+    --button-hover-bg: var(--button-hover-bg-light);
+}
+
+html[data-theme='dark'] {
+    --bg-color: var(--bg-color-dark);
+    --text-color: var(--text-color-dark);
+    --card-bg-color: var(--card-bg-color-dark);
+    --border-color: var(--border-color-dark);
+    --input-bg-color: var(--input-bg-color-dark);
+    --button-bg-color: var(--button-bg-color-dark);
+    --button-text-color: var(--button-text-color-dark);
+    --button-hover-bg: var(--button-hover-bg-dark);
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    margin: 0;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    transition: background-color 0.5s, color 0.5s;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+
+    /* 动态渐变背景 - 液态效果 */
+    background-image: linear-gradient(135deg, color(display-p3 0.659 0.753 1), color(display-p3 0.247 0.169 0.588), color(display-p3 1 0.494 0.373), color(display-p3 0.984 0.706 0.486));
+    background-size: 400% 400%;
+    animation: flowBackground 20s ease infinite;
+}
+
+@keyframes flowBackground {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* 液态玻璃效果核心样式 */
+.card, .module-card, .login-card, .theme-switcher-options, .rss-item-card {
+    position: relative;
+    background: rgba(var(--card-bg-color-rgb), 0.15);
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    padding: 20px;
+    margin-bottom: 20px;
+
+    backdrop-filter: blur(25px) saturate(180%);
+    -webkit-backdrop-filter: blur(25px) saturate(180%);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    transition: all 0.5s ease-in-out;
+}
+
+/* 输入框的液态效果 */
+select, input[type="url"], input[type="text"], input[type="password"] {
+    background-color: var(--input-bg-color);
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
+    padding: 12px 18px;
+    border-radius: 12px;
+    font-size: 16px;
+    transition: background-color 0.3s, border-color 0.3s, box-shadow 0.3s;
+    outline: none;
+}
+input:focus {
+    border-color: color(display-p3 0.4 0.6 1);
+    box-shadow: 0 0 0 3px color(display-p3 0.4 0.6 1 / 0.2);
+}
+
+/* 按钮的液态玻璃样式 */
+button, .back-button {
+    background: rgba(var(--card-bg-color-rgb), 0.2);
+    border: 1px solid var(--border-color);
+    padding: 12px 24px;
+    border-radius: 12px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.3s ease-in-out;
+    color: var(--text-color);
+    text-decoration: none;
+    
+    backdrop-filter: blur(15px) saturate(180%);
+    -webkit-backdrop-filter: blur(15px) saturate(180%);
+    box-shadow: 0 4px 12px 0 rgba(0, 0, 0, 0.1);
+}
+
+button:hover, .back-button:hover {
+    background: rgba(var(--card-bg-color-rgb), 0.4);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+}
+
+button:active, .back-button:active {
+    transform: translateY(0);
+    box-shadow: none;
+}
+
+/* 布局和组件样式 */
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 20px;
+    margin-bottom: 30px;
+}
+
+header h1 {
+    margin: 0;
+}
+
+header h1 a {
+    color: var(--text-color);
+    text-decoration: none;
+}
+
+header h1 a:hover {
+    text-decoration: underline;
+}
+
+.input-group {
+    display: flex;
+    gap: 10px;
+}
+
+.input-group input {
+    flex-grow: 1;
+    min-width: 0;
+}
+
+footer {
+    text-align: center;
+    margin-top: 40px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border-color);
+    color: #888;
+}
+
+/* RSS 阅读器样式 */
+#rss-loading {
+    margin-top: 15px;
+    text-align: center;
+    color: #888;
+}
+
+#rss-feed-container {
+    margin-top: 20px;
+}
+
+.rss-item-card {
+    padding: 20px;
+    margin-bottom: 20px;
+    border-bottom: none;
+}
+
+.rss-item {
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: none;
+}
+
+.rss-item:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+.rss-item-title a {
+    text-decoration: none;
+    color: var(--text-color);
+    font-size: 1.2em;
+    font-weight: bold;
+}
+
+.rss-item-title a:hover {
+    text-decoration: underline;
+}
+
+.rss-item-meta {
+    font-size: 0.9em;
+    color: #888;
+    margin: 5px 0;
+}
+
+.rss-item-description {
+    font-size: 1em;
+    line-height: 1.6;
+}
+
+.hidden {
+    display: none;
+}
+
+.saved-rss-title {
+    margin-top: 20px;
+    margin-bottom: 10px;
+}
+
+#saved-rss-list ul {
+    list-style: none;
+    padding: 0;
+}
+
+.saved-rss-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.saved-rss-item span {
+    flex-grow: 1;
+    word-break: break-all;
+    margin-right: 10px;
+}
+
+.rss-item-actions {
+    display: flex;
+    gap: 5px;
+}
+
+.podcast-title {
+    cursor: pointer;
+    user-select: none;
+}
+
+.podcast-title:hover {
+    text-decoration: underline;
+}
+
+.podcast-content.hidden {
+    display: none;
+}
+
+/* 音频播放器样式 - 修复布局和移除液态玻璃 */
+.audio-player {
+    width: 100%;
+    margin-top: 15px;
+    padding: 10px 15px;
+    background-color: var(--card-bg-color);
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    box-shadow: 0 4px 12px 0 rgba(0, 0, 0, 0.1);
+}
+
+/* 覆盖默认的 audio 控件样式 */
+.audio-player::-webkit-media-controls-panel {
+    background-color: transparent !important;
+    width: 100%;
+    
+    /* 修复错位：使用flexbox并设置对齐方式 */
+    display: flex;
+    flex-direction: row; /* 强制水平排列 */
+    align-items: center; /* 垂直居中 */
+    justify-content: space-between; /* 子元素之间留有间距 */
+    flex-wrap: nowrap; /* 不换行，确保所有元素在同一行 */
+}
+
+/* 确保所有控制按钮的颜色正常，并强制其在同一行 */
+.audio-player::-webkit-media-controls-play-button,
+.audio-player::-webkit-media-controls-timeline-container,
+.audio-player::-webkit-media-controls-current-time-display,
+.audio-player::-webkit-media-controls-time-remaining-display,
+.audio-player::-webkit-media-controls-mute-button,
+.audio-player::-webkit-media-controls-volume-slider-container,
+.audio-player::-webkit-media-controls-fullscreen-button {
+    color: var(--text-color) !important;
+    -webkit-appearance: none;
+    background-color: transparent !important;
+    border: none !important;
+    
+    /* 修复错位：强制设置为行内块级元素，并确保不收缩 */
+    display: inline-block !important;
+    flex-shrink: 0;
+}
+
+/* 确保进度条容器能够占据可用空间 */
+.audio-player::-webkit-media-controls-timeline-container {
+    flex-grow: 1; /* 占据剩余空间 */
+    flex-shrink: 1; /* 允许收缩 */
+    margin: 0 10px; /* 增加左右间距 */
+    min-width: 100px; /* 确保最小宽度，防止在小屏幕上过度收缩 */
+}
+
+/* 进度条和音量条的滑块和轨道样式 */
+.audio-player::-webkit-media-controls-timeline,
+.audio-player::-webkit-media-controls-volume-slider {
+    background: none !important;
+    width: 100%; /* 确保滑块条占满容器 */
+    -webkit-appearance: none;
+}
+
+.audio-player::-webkit-media-controls-timeline-container::-webkit-media-controls-timeline::-webkit-slider-runnable-track {
+    background: rgba(var(--text-color-rgb), 0.5);
+    height: 4px;
+    border-radius: 2px;
+}
+.audio-player::-webkit-media-controls-volume-slider-container::-webkit-media-controls-volume-slider::-webkit-slider-runnable-track {
+    background: rgba(var(--text-color-rgb), 0.5);
+    height: 4px;
+    border-radius: 2px;
+}
+
+.audio-player::-webkit-media-controls-timeline-container::-webkit-media-controls-timeline::-webkit-slider-thumb,
+.audio-player::-webkit-media-controls-volume-slider-container::-webkit-media-controls-volume-slider::-webkit-slider-thumb {
+    background: var(--text-color);
+    -webkit-appearance: none;
+    height: 16px;
+    width: 16px;
+    border-radius: 50%;
+}
+
+#pagination-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+#pagination-container button {
+    padding: 8px 16px;
+    background-color: var(--button-bg-color);
+    color: var(--button-text-color);
+    border-radius: 8px;
+}
+
+#pagination-container button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* 主页模块化布局 */
+.module-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    padding: 20px;
+}
+
+.module-card {
+    position: relative;
+    overflow: hidden;
+    background: rgba(var(--card-bg-color-rgb), 0.15);
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    padding: 40px;
+    text-align: center;
+    text-decoration: none;
+    color: var(--text-color);
+    transition: all 0.5s ease-in-out;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+
+    backdrop-filter: blur(25px) saturate(180%);
+    -webkit-backdrop-filter: blur(25px) saturate(180%);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+}
+
+.module-card:hover {
+    transform: scale(1.03);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.2);
+}
+
+.module-card h2 {
+    margin-top: 0;
+    transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
+}
+
+.module-card .explanation {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.8);
+    opacity: 0;
+    margin: 0;
+    font-size: 0.9em;
+    line-height: 1.6;
+    max-width: 80%;
+    color: #888;
+    transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
+}
+
+.module-card:hover h2 {
+    transform: translateY(-20px);
+    opacity: 0;
+}
+
+.module-card:hover .explanation {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+}
+
+/* 主题切换按钮样式 */
+.theme-switcher-container {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 10;
+}
+
+.theme-switcher-toggle {
+    background-color: rgba(var(--card-bg-color-rgb), 0.5);
+    color: var(--text-color);
+    border: 2px solid var(--border-color);
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s ease-in-out;
+
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+}
+
+.theme-switcher-toggle:hover {
+    transform: scale(1.1);
+    box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+}
+
+.theme-switcher-options {
+    position: absolute;
+    bottom: 60px;
+    right: 0;
+    background-color: rgba(var(--card-bg-color-rgb), 0.15);
+    border: 2px solid var(--border-color);
+    border-radius: 16px;
+    padding: 10px;
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(10px);
+    transition: opacity 0.4s ease-in-out, transform 0.4s ease-in-out, visibility 0s 0.4s;
+    box-shadow: 2px 5px 10px rgba(0, 0, 0, 0.1);
+
+    backdrop-filter: blur(25px) saturate(180%);
+    -webkit-backdrop-filter: blur(25px) saturate(180%);
+}
+
+.theme-switcher-options.open {
+    visibility: visible;
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity 0.4s ease-in-out, transform 0.4s ease-in-out, visibility 0s 0s;
+}
+
+.theme-switcher-options button {
+    background-color: transparent;
+    color: var(--text-color);
+    border: 2px solid var(--border-color);
+    border-radius: 12px;
+    padding: 8px 15px;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+}
+
+.theme-switcher-options button:hover {
+    background-color: var(--button-hover-bg);
+    color: var(--button-text-color);
+    transform: scale(1.05);
+}
+
+/* 登录页面样式 */
+.login-card {
+    max-width: 400px;
+    margin: 100px auto;
+    padding: 40px;
+    border-radius: 20px;
+    background: rgba(var(--card-bg-color-rgb), 0.15);
+    border: 1px solid var(--border-color);
+    text-align: center;
+
+    backdrop-filter: blur(25px) saturate(180%);
+    -webkit-backdrop-filter: blur(25px) saturate(180%);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+}
+
+.login-card h2 {
+    margin-bottom: 20px;
+}
+
+.login-input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+/* 返回按钮样式 */
+.back-button {
+    background: rgba(var(--card-bg-color-rgb), 0.2);
+    border: 1px solid var(--border-color);
+    padding: 12px 24px;
+    border-radius: 12px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.3s ease-in-out;
+    color: var(--text-color);
+    text-decoration: none;
+    
+    backdrop-filter: blur(15px) saturate(180%);
+    -webkit-backdrop-filter: blur(15px) saturate(180%);
+    box-shadow: 0 4px 12px 0 rgba(0, 0, 0, 0.1);
+}
+
+.back-button:hover {
+    background: rgba(var(--card-bg-color-rgb), 0.4);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+}
+
+.back-button:active {
+    transform: translateY(0);
+    box-shadow: none;
+}

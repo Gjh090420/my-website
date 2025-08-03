@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>播客详情</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container card" id="podcast-container">
+        <header>
+            <h1>播客详情</h1>
+            <a href="rss.html" class="back-button">返回 RSS</a>
+        </header>
+        <main>
+            <div id="podcast-detail">
+                </div>
+        </main>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const params = new URLSearchParams(window.location.search);
+            const audioUrl = params.get('audioUrl');
+            const title = params.get('title');
+            const description = params.get('description');
+            
+            const podcastDetail = document.getElementById('podcast-detail');
+
+            if (audioUrl && title) {
+                podcastDetail.innerHTML = `
+                    <h2>${decodeURIComponent(title)}</h2>
+                    <audio id="podcast-player" controls class="audio-player">
+                        <source src="${decodeURIComponent(audioUrl)}" type="audio/mpeg">
+                        您的浏览器不支持音频播放器。
+                    </audio>
+                    <div class="rss-item-description">
+                        ${decodeURIComponent(description)}
+                    </div>
+                `;
+
+                const player = document.getElementById('podcast-player');
+                const storageKey = `podcast_playback_${audioUrl}`;
+
+                // 尝试从 localStorage 加载上次的播放位置
+                const lastPosition = localStorage.getItem(storageKey);
+                if (lastPosition) {
+                    player.currentTime = parseFloat(lastPosition);
+                }
+
+                // 监听播放器，每 5 秒保存一次当前播放位置
+                let saveInterval;
+                player.addEventListener('play', () => {
+                    saveInterval = setInterval(() => {
+                        localStorage.setItem(storageKey, player.currentTime);
+                    }, 5000);
+                });
+
+                // 暂停时也保存，并清除定时器
+                player.addEventListener('pause', () => {
+                    localStorage.setItem(storageKey, player.currentTime);
+                    clearInterval(saveInterval);
+                });
+
+                // 播放结束时清除记录
+                player.addEventListener('ended', () => {
+                    localStorage.removeItem(storageKey);
+                    clearInterval(saveInterval);
+                });
+            } else {
+                podcastDetail.innerHTML = '<p>无法加载播客详情。</p>';
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Foync's Blog</title>
+    <meta name="description" content="Foync 的个人博客，分享技术与生活。">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Foync's Blog</h1>
+            <button id="logout-button">退出登录</button>
+        </header>
+        <main>
+            <div class="module-grid">
+                <a href="jump.html" class="module-card">
+                    <h2>🔎 网址跳转</h2>
+                    <p class="explanation">
+                        输入网址，一键跳转。便捷高效地访问新页面，支持在新标签页中打开。
+                    </p>
+                </a>
+                <a href="rss.html" class="module-card">
+                    <h2>📖 RSS 阅读器</h2>
+                    <p class="explanation">
+                        订阅你喜欢的博客和新闻源。实时获取最新文章，轻松在本站阅读。
+                    </p>
+                </a>
+            </div>
+        </main>
+        <footer>
+            <p>&copy; 2025 Foync</p>
+        </footer>
+    </div>
+    <div class="theme-switcher-container">
+        <button class="theme-switcher-toggle">
+            <svg viewBox="0 0 24 24" fill="currentColor" style="width: 24px; height: 24px;">
+                <path d="M12 3a9 9 0 0 1 9 9 9 9 0 0 1-9 9 9 9 0 0 1-9-9 9 9 0 0 1 9-9m0 2a7 7 0 0 0-7 7 7 7 0 0 0 7 7 7 7 0 0 0 7-7 7 7 0 0 0-7-7zM12 7v2a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1zm4 0v2a1 1 0 0 1-1 1h-2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1zm-8 4v2a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-2a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1zm8 0v2a1 1 0 0 1-1 1h-2a1 1 0 0 1-1-1v-2a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1zm-4 4v2a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1v-2a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1zm4 0v2a1 1 0 0 1-1 1h-2a1 1 0 0 1-1-1v-2a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1z"/>
+            </svg>
+        </button>
+        <div class="theme-switcher-options">
+            <button data-theme="system">适配系统</button>
+            <button data-theme="light">浅色模式</button>
+            <button data-theme="dark">深色模式</button>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RSS 阅读器 - Foync's Blog</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><a href="index.html">Foync's Blog</a></h1>
+            <button id="logout-button">退出登录</button>
+        </header>
+        <main>
+            <section class="card" id="rss-reader">
+                <h2>RSS 阅读器</h2>
+                <div class="input-group">
+                    <input type="url" id="rss-url-input" placeholder="输入 RSS 订阅源地址...">
+                    <button id="subscribe-button">读取</button>
+                </div>
+                <div id="rss-loading" class="hidden">正在加载...</div>
+                <div id="rss-feed-container">
+                </div>
+            </section>
+        </main>
+        <footer>
+            <p>&copy; 2025 Foync</p>
+        </footer>
+    </div>
+    <div class="theme-switcher-container">
+        <button class="theme-switcher-toggle">
+            <svg viewBox="0 0 24 24" fill="currentColor" style="width: 24px; height: 24px;">
+                <path d="M12 3a9 9 0 0 1 9 9 9 9 0 0 1-9 9 9 9 0 0 1-9-9 9 9 0 0 1 9-9m0 2a7 7 0 0 0-7 7 7 7 0 0 0 7 7 7 7 0 0 0 7-7 7 7 0 0 0-7-7zM12 7v2a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1zm4 0v2a1 1 0 0 1-1 1h-2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1zm-8 4v2a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-2a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1zm8 0v2a1 1 0 0 1-1 1h-2a1 1 0 0 1-1-1v-2a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1zm-4 4v2a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1v-2a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1zm4 0v2a1 1 0 0 1-1 1h-2a1 1 0 0 1-1-1v-2a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1z"/>
+            </svg>
+        </button>
+        <div class="theme-switcher-options">
+            <button data-theme="system">适配系统</button>
+            <button data-theme="light">浅色模式</button>
+            <button data-theme="dark">深色模式</button>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
