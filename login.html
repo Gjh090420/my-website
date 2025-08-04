@@ -6,14 +6,23 @@
     <title>登录 - Foync's Blog</title>
     <link rel="stylesheet" href="style.css">
     <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
         .login-card {
             max-width: 400px;
-            margin: 100px auto;
             padding: 40px;
-            border-radius: 8px;
-            background-color: var(--card-bg-color);
-            border: 1px solid var(--border-color);
+            border-radius: 20px;
             text-align: center;
+            background: rgba(var(--card-bg-color-rgb), 0.15);
+            border: 1px solid var(--border-color);
+            backdrop-filter: blur(25px) saturate(180%);
+            -webkit-backdrop-filter: blur(25px) saturate(180%);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
         }
 
         .login-card h2 {
@@ -26,16 +35,40 @@
             gap: 15px;
             margin-bottom: 20px;
         }
-        
+
         .login-input-group input {
             width: 100%;
-            box-sizing: border-box; /* 确保 padding 不会增加宽度 */
+            box-sizing: border-box;
+            padding: 15px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            background-color: var(--input-bg-color);
+            color: var(--text-color);
+            font-size: 1em;
+            transition: border-color 0.2s ease-in-out;
         }
 
+        .login-input-group input:focus {
+            outline: none;
+            border-color: rgba(var(--text-color-rgb), 0.5);
+        }
+        
         .login-button {
             width: 100%;
             box-sizing: border-box;
-            padding: 10px;
+            padding: 15px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            background-color: var(--button-bg-color);
+            color: var(--button-text-color);
+            transition: background-color 0.2s ease-in-out;
+        }
+        
+        .login-button:hover {
+            background-color: var(--button-hover-bg);
         }
     </style>
 </head>
@@ -47,9 +80,7 @@
             <input type="password" id="password" placeholder="密码" required>
         </div>
         <button id="login-button" class="login-button">登录</button>
-        <p id="error-message" style="color: red; display: none; margin-top: 15px;">用户名或密码错误。</p>
     </div>
-
     <script src="script.js"></script>
 </body>
 </html>

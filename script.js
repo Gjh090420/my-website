@@ -1,13 +1,17 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // ===================================
+    // 登录验证和页面权限管理
+    // ===================================
     const currentPage = window.location.pathname.split('/').pop();
     const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
-    const restrictedPages = ['jump.html', 'rss.html', 'notes.html'];
+    const restrictedPages = ['jump.html', 'rss.html', 'notes.html', 'podcast.html'];
 
+    // 如果未登录且访问受限页面，则跳转到登录页
     if (restrictedPages.includes(currentPage) && !isLoggedIn) {
         window.location.href = 'login.html';
         return;
     }
-    
+
     // 动态显示登录/退出登录按钮
     const authButton = document.getElementById('auth-button');
     if (authButton) {
@@ -25,7 +29,37 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // ===================================
+    // 登录功能
+    // ===================================
+    const usernameInput = document.getElementById('username');
+    const passwordInput = document.getElementById('password');
+    const loginButton = document.getElementById('login-button');
+
+    if (loginButton) {
+        loginButton.addEventListener('click', (e) => {
+            e.preventDefault(); // 防止表单默认提交行为
+            const username = usernameInput.value.trim().toLowerCase();
+            const password = passwordInput.value.trim();
+
+            // 修正：用户名转小写，密码保持原样
+            if (username === 'foync' && password === '090420') {
+                localStorage.setItem('isLoggedIn', 'true');
+                window.location.href = 'index.html';
+            } else {
+                alert('用户名或密码错误，请重试。');
+            }
+        });
+    }
+
+    // ===================================
+    // 主题切换功能
+    // ===================================
     const htmlElement = document.documentElement;
+    const themeSwitcherContainer = document.querySelector('.theme-switcher-container');
+    const themeSwitcherToggle = document.querySelector('.theme-switcher-toggle');
+    const themeSwitcherOptions = document.querySelector('.theme-switcher-options');
+    const themeButtons = document.querySelectorAll('.theme-switcher-options button');
 
     function applyTheme(theme) {
         if (theme === 'system') {
@@ -37,16 +71,16 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.setItem('theme', theme);
         
         // 动态调整文本颜色 RGB 变量
-        if (theme === 'dark') {
+        if (htmlElement.dataset.theme === 'dark') {
             htmlElement.style.setProperty('--text-color-rgb', '224, 224, 224');
-        } else if (theme === 'colorful') {
+        } else if (htmlElement.dataset.theme === 'colorful') {
             htmlElement.style.setProperty('--text-color-rgb', '51, 51, 51');
         } else {
             htmlElement.style.setProperty('--text-color-rgb', '18, 18, 18');
         }
     }
 
-    const savedTheme = localStorage.getItem('theme') || 'colorful'; // 修改此处：将默认主题设为 'colorful'
+    const savedTheme = localStorage.getItem('theme') || 'system';
     applyTheme(savedTheme);
 
     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
@@ -54,11 +88,6 @@ document.addEventListener('DOMContentLoaded', () => {
             applyTheme('system');
         }
     });
-
-    const themeSwitcherContainer = document.querySelector('.theme-switcher-container');
-    const themeSwitcherToggle = document.querySelector('.theme-switcher-toggle');
-    const themeSwitcherOptions = document.querySelector('.theme-switcher-options');
-    const themeButtons = document.querySelectorAll('.theme-switcher-options button');
 
     if (themeSwitcherToggle) {
         themeSwitcherToggle.addEventListener('click', (event) => {
@@ -91,439 +120,307 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // ===================================
-    //  网址跳转功能
+    // 网址跳转功能
     // ===================================
     const urlInput = document.getElementById('url-input');
-    const jumpButton = document.getElementById('jump-button');
-    if (jumpButton) {
-        function navigateToUrl() {
-            let url = urlInput.value.trim();
-            if (url) {
-                if (!url.startsWith('http://') && !url.startsWith('https://')) {
-                    url = 'https://' + url;
-                }
-                window.open(url, '_blank');
-            } else {
-                alert('请输入一个有效的网址。');
-            }
-        }
-        jumpButton.addEventListener('click', navigateToUrl);
-        if (urlInput) {
-            urlInput.addEventListener('keypress', (event) => {
-                if (event.key === 'Enter') {
-                    navigateToUrl();
-                }
+    const urlNameInput = document.getElementById('url-name');
+    const addJumpBtn = document.getElementById('add-jump-btn');
+    const jumpList = document.getElementById('jump-list');
+
+    function saveJumps() {
+        const jumps = [];
+        if (jumpList) {
+            jumpList.querySelectorAll('.jump-list-item').forEach(item => {
+                jumps.push({
+                    url: item.dataset.url,
+                    name: item.querySelector('.jump-title').textContent
+                });
             });
         }
+        localStorage.setItem('jumps', JSON.stringify(jumps));
     }
 
+    function renderJumps() {
+        if (!jumpList) return;
+        jumpList.innerHTML = '';
+        const jumps = JSON.parse(localStorage.getItem('jumps')) || [];
+        jumps.forEach(jump => {
+            const jumpItem = document.createElement('a');
+            jumpItem.href = jump.url;
+            jumpItem.target = '_blank';
+            jumpItem.className = 'jump-list-item card';
+            jumpItem.dataset.url = jump.url;
+            jumpItem.innerHTML = `
+                <span class="jump-title">${jump.name}</span>
+                <span class="jump-url">${jump.url}</span>
+                <button class="jump-delete-btn">删除</button>
+            `;
+            jumpList.appendChild(jumpItem);
+        });
+    }
+
+    if (addJumpBtn) {
+        addJumpBtn.addEventListener('click', () => {
+            const url = urlInput.value;
+            const name = urlNameInput.value || url;
+            if (url) {
+                const jumps = JSON.parse(localStorage.getItem('jumps')) || [];
+                jumps.push({ url, name });
+                localStorage.setItem('jumps', JSON.stringify(jumps));
+                renderJumps();
+                urlInput.value = '';
+                urlNameInput.value = '';
+            }
+        });
+    }
+
+    if (jumpList) {
+        jumpList.addEventListener('click', (e) => {
+            if (e.target.classList.contains('jump-delete-btn')) {
+                e.preventDefault();
+                const jumpItem = e.target.closest('.jump-list-item');
+                const urlToDelete = jumpItem.dataset.url;
+                const jumps = JSON.parse(localStorage.getItem('jumps')) || [];
+                const updatedJumps = jumps.filter(jump => jump.url !== urlToDelete);
+                localStorage.setItem('jumps', JSON.stringify(updatedJumps));
+                jumpItem.remove();
+            }
+        });
+        renderJumps();
+    }
+    
     // ===================================
-    //  RSS 阅读器功能
+    // RSS 阅读器功能
     // ===================================
     const rssUrlInput = document.getElementById('rss-url-input');
-    const subscribeButton = document.getElementById('subscribe-button');
-    const feedContainer = document.getElementById('rss-feed-container');
-    const loadingIndicator = document.getElementById('rss-loading');
-    const paginationContainer = document.createElement('div');
-    paginationContainer.id = 'pagination-container';
+    const subscribeBtn = document.getElementById('subscribe-button');
+    const rssFeedContainer = document.getElementById('rss-feed-container');
+    const rssLoading = document.getElementById('rss-loading');
 
-    if (feedContainer) {
-        let currentFeedData = null;
-        const itemsPerPage = 10;
-        let currentPage = 1;
-        const savedRssListContainer = document.createElement('div');
-        savedRssListContainer.id = 'saved-rss-list';
-        feedContainer.before(savedRssListContainer);
-        feedContainer.after(paginationContainer);
+    function saveRssFeeds(feeds) {
+        localStorage.setItem('rssFeeds', JSON.stringify(feeds));
+    }
 
-        function renderPagination() {
-            paginationContainer.innerHTML = '';
-            if (!currentFeedData || currentFeedData.items.length <= itemsPerPage) return;
-            const totalPages = Math.ceil(currentFeedData.items.length / itemsPerPage);
-            const prevButton = document.createElement('button');
-            prevButton.textContent = '上一页';
-            prevButton.disabled = currentPage === 1;
-            prevButton.addEventListener('click', () => {
-                currentPage--;
-                displayFeed(currentFeedData);
-                window.scrollTo(0, 0);
-            });
-            paginationContainer.appendChild(prevButton);
-            const pageInfo = document.createElement('span');
-            pageInfo.textContent = `第 ${currentPage} 页 / 共 ${totalPages} 页`;
-            paginationContainer.appendChild(pageInfo);
-            const nextButton = document.createElement('button');
-            nextButton.textContent = '下一页';
-            nextButton.disabled = currentPage === totalPages;
-            nextButton.addEventListener('click', () => {
-                currentPage++;
-                displayFeed(currentFeedData);
-                window.scrollTo(0, 0);
-            });
-            paginationContainer.appendChild(nextButton);
-        }
-
-        async function fetchRssFeed(rssUrl) {
-            loadingIndicator.classList.remove('hidden');
-            feedContainer.innerHTML = '';
-
-            const apiUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(rssUrl)}`;
-
-            try {
-                const response = await fetch(apiUrl);
-                if (!response.ok) {
-                    throw new Error(`网络响应错误: ${response.statusText}`);
-                }
-                const data = await response.json();
-
-                if (data.status === 'ok') {
-                    let feedTitle = data.feed.title;
-                    if (!feedTitle) {
-                        const newTitle = prompt('该订阅源缺少标题，请为其命名：', '未命名订阅');
-                        if (newTitle === null || newTitle.trim() === '') {
-                            alert('取消订阅。');
-                            return;
-                        }
-                        feedTitle = newTitle.trim();
-                    }
-
-                    currentFeedData = data;
-                    currentPage = 1;
-                    displayFeed(currentFeedData);
-                    alert('RSS 订阅读取成功！');
-                    rssUrlInput.value = '';
-                    saveRssFeed({ url: rssUrl, title: feedTitle });
-                } else {
-                    throw new Error(data.message || '无法解析此 RSS 源。');
-                }
-            } catch (error) {
-                console.error('获取 RSS 失败:', error);
-                feedContainer.innerHTML = `<p style="color: red;">加载失败: ${error.message}</p>`;
-                alert('RSS 订阅读取失败，请检查。');
-            } finally {
-                loadingIndicator.classList.add('hidden');
-            }
-        }
-
-        function displayFeed(data) {
-            const feedInfo = `<h3><a href="${data.feed.link}" target="_blank">${data.feed.title}</a></h3><p>${data.feed.description}</p>`;
-            feedContainer.innerHTML = feedInfo;
-
-            const start = (currentPage - 1) * itemsPerPage;
-            const end = start + itemsPerPage;
-            const itemsToDisplay = data.items.slice(start, end);
-
-            itemsToDisplay.forEach(item => {
-                const itemElement = document.createElement('div');
-                // 新增：为每个 RSS 条目添加液态玻璃卡片样式
-                itemElement.classList.add('rss-item-card');
-                const hasAudio = item.enclosure && item.enclosure.type && item.enclosure.type.startsWith('audio');
-
-                const titleText = hasAudio ? `🎧 ${item.title}` : item.title;
-                const meta = `<div class="rss-item-meta">作者: ${item.author || '未知'} | 发布于: ${new Date(item.pubDate).toLocaleString()}</div>`;
-                const tempDiv = document.createElement('div');
-                tempDiv.innerHTML = item.description;
-                const descriptionText = tempDiv.textContent || tempDiv.innerText || "";
-                const description = `<div class="rss-item-description">${descriptionText.substring(0, 300)}...</div>`;
-
-                const itemLink = item.link;
-                itemElement.innerHTML = `
-                    <div class="rss-item">
-                        <h4 class="rss-item-title"><a href="${itemLink}" target="_blank">${titleText}</a></h4>
-                        ${meta}
-                        ${description}
+    function getRssFeeds() {
+        return JSON.parse(localStorage.getItem('rssFeeds')) || [];
+    }
+    
+    async function fetchRssFeed(url, container) {
+        container.innerHTML = '<p>加载中...</p>';
+        try {
+            const CORS_PROXY = 'https://api.allorigins.win/raw?url=';
+            const response = await fetch(`${CORS_PROXY}${encodeURIComponent(url)}`);
+            const text = await response.text();
+            
+            const parser = new DOMParser();
+            const xmlDoc = parser.parseFromString(text, "text/xml");
+            
+            const items = xmlDoc.querySelectorAll('item');
+            let feedContent = '';
+            
+            items.forEach(item => {
+                const title = item.querySelector('title')?.textContent || '无标题';
+                const link = item.querySelector('link')?.textContent || '#';
+                const description = item.querySelector('description')?.textContent || '无描述';
+                
+                feedContent += `
+                    <div class="rss-feed-item card">
+                        <h4><a href="${link}" target="_blank">${title}</a></h4>
+                        <p>${description}</p>
                     </div>
                 `;
-
-                if (hasAudio) {
-                    const titleElement = itemElement.querySelector('.rss-item-title a');
-                    titleElement.href = `podcast.html?audioUrl=${encodeURIComponent(item.enclosure.link)}&title=${encodeURIComponent(item.title)}&description=${encodeURIComponent(item.description)}`;
-                }
-
-                feedContainer.appendChild(itemElement);
             });
-
-            renderPagination();
+            container.innerHTML = feedContent;
+        } catch (error) {
+            console.error('获取 RSS 失败:', error);
+            container.innerHTML = '<p>加载 RSS 失败。请检查地址是否正确。</p>';
         }
+    }
 
-        function loadSavedRssFeeds() {
-            savedRssListContainer.innerHTML = '<h3 class="saved-rss-title">已保存的订阅</h3>';
-            const savedFeeds = JSON.parse(localStorage.getItem('savedRssFeeds')) || [];
+    function renderRssFeeds() {
+        if (!rssFeedContainer) return;
+        const feeds = getRssFeeds();
+        rssFeedContainer.innerHTML = '';
+        feeds.forEach(feed => {
+            const feedCard = document.createElement('div');
+            feedCard.className = 'rss-card card';
+            feedCard.innerHTML = `
+                <div class="rss-card-header">
+                    <h3>${feed.title || feed.url}</h3>
+                    <div class="rss-actions">
+                        <button class="delete-rss-btn" data-url="${feed.url}">删除</button>
+                    </div>
+                </div>
+                <div class="rss-feed-content" data-url="${feed.url}">加载中...</div>
+            `;
+            rssFeedContainer.appendChild(feedCard);
+            const contentContainer = feedCard.querySelector('.rss-feed-content');
+            fetchRssFeed(feed.url, contentContainer);
+        });
+    }
 
-            const filteredFeeds = savedFeeds.filter(feed => feed.title !== 'undefined');
-
-            if (filteredFeeds.length > 0) {
-                const list = document.createElement('ul');
-                filteredFeeds.forEach(feed => {
-                    const feedItem = document.createElement('li');
-                    feedItem.className = 'saved-rss-item';
-                    feedItem.innerHTML = `
-                        <span class="feed-title" data-url="${feed.url}">${feed.title}</span>
-                        <div class="rss-item-actions">
-                            <button class="read-saved-rss-btn" data-url="${feed.url}">读取</button>
-                            <button class="edit-rss-btn" data-url="${feed.url}">编辑</button>
-                            <button class="delete-rss-btn" data-url="${feed.url}">删除</button>
-                        </div>
-                    `;
-                    list.appendChild(feedItem);
-                });
-                savedRssListContainer.appendChild(list);
-            } else {
-                savedRssListContainer.innerHTML += '<p>暂无已保存的订阅源。</p>';
-            }
-
-            localStorage.setItem('savedRssFeeds', JSON.stringify(filteredFeeds));
-        }
-
-        function saveRssFeed(feed) {
-            let savedFeeds = JSON.parse(localStorage.getItem('savedRssFeeds')) || [];
-            if (!savedFeeds.some(f => f.url === feed.url)) {
-                savedFeeds.push(feed);
-                localStorage.setItem('savedRssFeeds', JSON.stringify(savedFeeds));
-                loadSavedRssFeeds();
-            }
-        }
-
-        function updateRssFeedTitle(url, newTitle) {
-            let savedFeeds = JSON.parse(localStorage.getItem('savedRssFeeds')) || [];
-            savedFeeds.forEach(feed => {
-                if (feed.url === url) {
-                    feed.title = newTitle;
+    if (subscribeBtn) {
+        subscribeBtn.addEventListener('click', () => {
+            const url = rssUrlInput.value.trim();
+            if (url) {
+                const feeds = getRssFeeds();
+                // 检查是否已存在
+                if (!feeds.some(feed => feed.url === url)) {
+                    feeds.push({ url: url, title: url });
+                    saveRssFeeds(feeds);
+                    renderRssFeeds();
+                    rssUrlInput.value = '';
+                } else {
+                    alert('该订阅源已存在！');
                 }
-            });
-            localStorage.setItem('savedRssFeeds', JSON.stringify(savedFeeds));
-            loadSavedRssFeeds();
-        }
-
-        function deleteRssFeed(url) {
-            let savedFeeds = JSON.parse(localStorage.getItem('savedRssFeeds')) || [];
-            savedFeeds = savedFeeds.filter(feed => feed.url !== url);
-            localStorage.setItem('savedRssFeeds', JSON.stringify(savedFeeds));
-            loadSavedRssFeeds();
-        }
-
-        if (isLoggedIn) {
-            loadSavedRssFeeds();
-        }
-
-        subscribeButton.addEventListener('click', () => {
-            const rssUrl = rssUrlInput.value.trim();
-            if (rssUrl) {
-                fetchRssFeed(rssUrl);
-            } else {
-                alert('请输入 RSS 订阅源地址。');
             }
         });
-
-        if (rssUrlInput) {
-            rssUrlInput.addEventListener('keypress', (event) => {
-                if (event.key === 'Enter') {
-                    const rssUrl = rssUrlInput.value.trim();
-                    if (rssUrl) {
-                        fetchRssFeed(rssUrl);
-                    } else {
-                        alert('请输入 RSS 订阅源地址。');
-                    }
-                }
-            });
-        }
-
-        if (savedRssListContainer) {
-            savedRssListContainer.addEventListener('click', async (event) => {
-                const target = event.target;
-                const url = target.dataset.url;
-                if (!url) return;
-
-                if (target.classList.contains('read-saved-rss-btn')) {
-                    fetchRssFeed(url);
-                } else if (target.classList.contains('delete-rss-btn')) {
-                    if (confirm('确定要删除此订阅吗？')) {
-                        deleteRssFeed(url);
-                    }
-                } else if (target.classList.contains('edit-rss-btn')) {
-                    const newTitle = prompt('请输入新的订阅名称：', target.closest('.saved-rss-item').querySelector('.feed-title').textContent);
-                    if (newTitle !== null && newTitle.trim() !== '') {
-                        updateRssFeedTitle(url, newTitle);
-                    }
-                }
-            });
-        }
     }
 
+    if (rssFeedContainer) {
+        rssFeedContainer.addEventListener('click', (e) => {
+            if (e.target.classList.contains('delete-rss-btn')) {
+                const urlToDelete = e.target.dataset.url;
+                const feeds = getRssFeeds();
+                const updatedFeeds = feeds.filter(feed => feed.url !== urlToDelete);
+                saveRssFeeds(updatedFeeds);
+                renderRssFeeds();
+            }
+        });
+        renderRssFeeds();
+    }
+    
     // ===================================
-    //  播客详情页面
+    // 笔记功能
     // ===================================
-    const podcastContainer = document.getElementById('podcast-container');
-    if (podcastContainer) {
-        const urlParams = new URLSearchParams(window.location.search);
-        const audioUrl = urlParams.get('audioUrl');
-        const title = urlParams.get('title');
-        const description = urlParams.get('description');
+    const addNoteBtn = document.getElementById('add-note-btn');
+    const notesListContainer = document.getElementById('notes-list-container');
+    const noteEditorContainer = document.getElementById('note-editor-container');
+    
+    function getNotes() {
+        return JSON.parse(localStorage.getItem('notes')) || [];
+    }
 
-        const podcastDetail = document.getElementById('podcast-detail');
-        if (podcastDetail && audioUrl && title) {
-            podcastDetail.innerHTML = `
-                <h2>${title}</h2>
-                <audio controls class="audio-player">
-                    <source src="${audioUrl}" type="audio/mpeg">
-                    你的浏览器不支持音频播放。
-                </audio>
-                <div class="podcast-description">${description || ''}</div>
+    function saveNotes(notes) {
+        localStorage.setItem('notes', JSON.stringify(notes));
+    }
+
+    function renderNotesList() {
+        if (!notesListContainer) return;
+        notesListContainer.innerHTML = '';
+        const notes = getNotes();
+        notes.forEach(note => {
+            const noteItem = document.createElement('div');
+            noteItem.className = 'notes-list-item';
+            noteItem.dataset.noteId = note.id;
+            noteItem.innerHTML = `
+                <h4>${note.title}</h4>
+                <button class="delete-note-btn">删除</button>
             `;
-        } else {
-            if (podcastDetail) {
-                podcastDetail.innerHTML = '<p>未找到播客信息。</p>';
-            }
-        }
+            notesListContainer.appendChild(noteItem);
+        });
     }
 
-    // ===================================
-    //  笔记功能
-    // ===================================
-    const newNoteBtn = document.getElementById('new-note-btn');
-    const notesList = document.getElementById('notes-list');
-    const noteTitleInput = document.getElementById('note-title-input');
-    const editorContent = document.getElementById('editor-content');
-    const saveNoteBtn = document.getElementById('save-note-btn');
-    const deleteNoteBtn = document.getElementById('delete-note-btn');
-    const toggleViewBtn = document.getElementById('toggle-view-btn');
-    const noteContentPreview = document.getElementById('note-content-preview');
-
-    let currentNoteId = null;
-
-    if (newNoteBtn) {
-        function renderNotesList() {
-            notesList.innerHTML = '';
-            const notes = JSON.parse(localStorage.getItem('notes')) || [];
-            if (notes.length === 0) {
-                notesList.innerHTML = '<p class="no-notes-message">暂无笔记</p>';
-                return;
-            }
-
-            notes.forEach(note => {
-                const noteItem = document.createElement('div');
-                noteItem.classList.add('notes-list-item');
-                noteItem.dataset.id = note.id;
-                noteItem.innerHTML = `
-                    <h4>${note.title || '无标题笔记'}</h4>
-                `;
-                noteItem.addEventListener('click', () => {
-                    loadNote(note.id);
-                });
-                notesList.appendChild(noteItem);
-            });
-
-            // 恢复选中状态
-            if (currentNoteId) {
-                const activeItem = document.querySelector(`.notes-list-item[data-id='${currentNoteId}']`);
-                if (activeItem) {
-                    activeItem.classList.add('active');
-                }
-            }
-        }
-
-        function loadNote(id) {
-            const notes = JSON.parse(localStorage.getItem('notes')) || [];
-            const note = notes.find(n => n.id === id);
-
-            if (note) {
-                currentNoteId = note.id;
-                noteTitleInput.value = note.title;
-                editorContent.value = note.content;
-                deleteNoteBtn.classList.remove('hidden');
-
-                document.querySelectorAll('.notes-list-item').forEach(item => item.classList.remove('active'));
-                document.querySelector(`.notes-list-item[data-id='${id}']`).classList.add('active');
-            }
-        }
-
-        function saveNote() {
-            const notes = JSON.parse(localStorage.getItem('notes')) || [];
-            const title = noteTitleInput.value.trim() || '无标题笔记';
-            const content = editorContent.value.trim();
-
-            if (!content) {
-                alert('笔记内容不能为空！');
-                return;
-            }
-
-            if (currentNoteId) {
-                const noteIndex = notes.findIndex(n => n.id === currentNoteId);
-                if (noteIndex > -1) {
-                    notes[noteIndex].title = title;
-                    notes[noteIndex].content = content;
-                    notes[noteIndex].updatedAt = new Date().toISOString();
-                }
-            } else {
-                const newNote = {
-                    id: Date.now().toString(),
-                    title: title,
-                    content: content,
-                    createdAt: new Date().toISOString(),
-                    updatedAt: new Date().toISOString(),
-                };
-                notes.push(newNote);
-                currentNoteId = newNote.id;
-            }
-
-            localStorage.setItem('notes', JSON.stringify(notes));
-            renderNotesList();
-            alert('笔记已保存！');
-        }
-
-        function deleteNote() {
-            if (!currentNoteId) return;
-
-            if (confirm('确定要删除此笔记吗？')) {
-                let notes = JSON.parse(localStorage.getItem('notes')) || [];
-                notes = notes.filter(n => n.id !== currentNoteId);
-                localStorage.setItem('notes', JSON.stringify(notes));
-                alert('笔记已删除。');
-                newNote();
+    function displayNoteContent(note) {
+        if (!noteEditorContainer) return;
+        
+        noteEditorContainer.innerHTML = `
+            <div class="note-edit-area card">
+                <input type="text" id="note-title-input" placeholder="笔记标题" value="${note.title}">
+                <div class="editor-toolbar">
+                    <button id="bold-btn"><b>B</b></button>
+                    <button id="italic-btn"><i>I</i></button>
+                    <button id="underline-btn"><u>U</u></button>
+                </div>
+                <textarea id="note-editor" class="note-textarea">${note.content}</textarea>
+                <div class="note-actions">
+                    <button id="save-note-btn" class="login-button">保存</button>
+                </div>
+            </div>
+        `;
+        
+        const noteEditor = document.getElementById('note-editor');
+        const noteTitleInput = document.getElementById('note-title-input');
+        const saveNoteBtn = document.getElementById('save-note-btn');
+        
+        noteEditor.focus();
+        
+        saveNoteBtn.addEventListener('click', () => {
+            note.content = noteEditor.value;
+            note.title = noteTitleInput.value.trim() || '无标题';
+            const notes = getNotes();
+            const noteIndex = notes.findIndex(n => n.id === note.id);
+            if (noteIndex !== -1) {
+                notes[noteIndex] = note;
+                saveNotes(notes);
                 renderNotesList();
             }
-        }
+        });
+    }
 
-        function newNote() {
-            currentNoteId = null;
-            noteTitleInput.value = '';
-            editorContent.value = '';
-            deleteNoteBtn.classList.add('hidden');
-            document.querySelectorAll('.notes-list-item').forEach(item => item.classList.remove('active'));
-        }
+    if (addNoteBtn) {
+        addNoteBtn.addEventListener('click', () => {
+            const newNote = {
+                id: Date.now(),
+                title: '新笔记',
+                content: ''
+            };
+            const notes = getNotes();
+            notes.push(newNote);
+            saveNotes(notes);
+            renderNotesList();
+            displayNoteContent(newNote);
+        });
+    }
 
-        function toggleView() {
-            if (toggleViewBtn.textContent === '预览') {
-                noteContentPreview.innerHTML = marked.parse(editorContent.value);
-                document.getElementById('editor-view').classList.add('hidden');
-                noteContentPreview.classList.remove('hidden');
-                toggleViewBtn.textContent = '编辑';
+    if (notesListContainer) {
+        notesListContainer.addEventListener('click', (e) => {
+            if (e.target.classList.contains('delete-note-btn')) {
+                e.stopPropagation();
+                const noteItem = e.target.closest('.notes-list-item');
+                const noteId = parseInt(noteItem.dataset.noteId);
+                const notes = getNotes();
+                const updatedNotes = notes.filter(n => n.id !== noteId);
+                saveNotes(updatedNotes);
+                renderNotesList();
+                if (noteEditorContainer.querySelector('[data-note-id="' + noteId + '"]')) {
+                    noteEditorContainer.innerHTML = '<p>请在左侧选择一篇笔记进行查看或编辑。</p>';
+                }
             } else {
-                noteContentPreview.classList.add('hidden');
-                document.getElementById('editor-view').classList.remove('hidden');
-                toggleViewBtn.textContent = '预览';
+                const noteItem = e.target.closest('.notes-list-item');
+                if (noteItem) {
+                    const noteId = parseInt(noteItem.dataset.noteId);
+                    const notes = getNotes();
+                    const note = notes.find(n => n.id === noteId);
+                    if (note) {
+                        displayNoteContent(note);
+                    }
+                }
             }
-        }
-
-        newNoteBtn.addEventListener('click', newNote);
-        saveNoteBtn.addEventListener('click', saveNote);
-        deleteNoteBtn.addEventListener('click', deleteNote);
-        toggleViewBtn.addEventListener('click', toggleView);
-
-        // 绑定富文本控制按钮
-        document.getElementById('bold-btn').addEventListener('click', () => {
-            document.execCommand('bold', false, null);
         });
-        document.getElementById('italic-btn').addEventListener('click', () => {
-            document.execCommand('italic', false, null);
-        });
-        document.getElementById('underline-btn').addEventListener('click', () => {
-            document.execCommand('underline', false, null);
-        });
-        document.getElementById('font-size-select').addEventListener('change', (e) => {
-            document.execCommand('fontSize', false, e.target.value);
-        });
-
         renderNotesList();
+    }
+    
+    // ===================================
+    // 播客功能
+    // ===================================
+    const podcastDetailContainer = document.getElementById('podcast-detail-container');
+    const urlParams = new URLSearchParams(window.location.search);
+    const audioUrl = urlParams.get('audio');
+    const title = urlParams.get('title');
+    const description = urlParams.get('description');
+
+    if (podcastDetailContainer && audioUrl && title && description) {
+        const cleanDescription = decodeURIComponent(description);
+        podcastDetailContainer.innerHTML = `
+            <h2>${decodeURIComponent(title)}</h2>
+            <audio id="podcast-player" controls class="audio-player">
+                <source src="${decodeURIComponent(audioUrl)}" type="audio/mpeg">
+                您的浏览器不支持音频播放器。
+            </audio>
+            <div class="rss-item-description">
+                ${cleanDescription}
+            </div>
+        `;
     }
 });
