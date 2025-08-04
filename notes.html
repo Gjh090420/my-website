@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的笔记 - Foync's Blog</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .notes-grid {
+            display: grid;
+            grid-template-columns: 1fr 3fr;
+            gap: 20px;
+            min-height: 70vh;
+        }
+
+        .notes-list-card {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding: 20px;
+        }
+
+        .notes-list-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            background-color: rgba(var(--text-color-rgb), 0.05);
+        }
+
+        .notes-list-item:hover {
+            background-color: rgba(var(--text-color-rgb), 0.1);
+            transform: translateX(5px);
+        }
+        
+        .notes-list-item.active {
+            background-color: rgba(var(--text-color-rgb), 0.2);
+        }
+
+        .notes-list-item h4 {
+            margin: 0;
+            flex-grow: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .notes-list-item button {
+            margin-left: 10px;
+            padding: 5px 10px;
+            font-size: 0.8em;
+        }
+
+        .note-editor-card {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .editor-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        #note-title-input {
+            flex-grow: 1;
+            border: none;
+            background: transparent;
+            font-size: 1.5em;
+            font-weight: bold;
+            padding: 5px;
+            color: var(--text-color);
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        #note-title-input:focus {
+            outline: none;
+            border-bottom: 1px solid color(display-p3 0.4 0.6 1);
+        }
+
+        .editor-controls {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 10px;
+            width: 100%; /* 新增：确保工具栏占满宽度 */
+        }
+        
+        #editor-content {
+            flex-grow: 1;
+            min-height: 50vh;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 15px;
+            background-color: var(--input-bg-color);
+            font-family: inherit;
+            color: var(--text-color);
+            resize: vertical;
+            width: 100%; /* 新增：确保文本框占满宽度 */
+            box-sizing: border-box; /* 确保 padding 不会增加宽度 */
+        }
+
+        #note-content-preview {
+            flex-grow: 1;
+            min-height: 50vh;
+            padding: 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            background-color: var(--input-bg-color);
+            width: 100%; /* 新增：确保预览区域占满宽度 */
+            box-sizing: border-box; /* 确保 padding 不会增加宽度 */
+        }
+
+        #note-content-preview h1, #note-content-preview h2, #note-content-preview h3, #note-content-preview h4, #note-content-preview h5, #note-content-preview h6 {
+            margin-top: 20px;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        #note-content-preview p {
+            margin: 0 0 1em;
+        }
+        
+        #note-content-preview code {
+            background-color: rgba(var(--text-color-rgb), 0.1);
+            border-radius: 4px;
+            padding: 2px 4px;
+            font-family: monospace;
+        }
+        
+        #note-content-preview pre {
+            background-color: rgba(var(--text-color-rgb), 0.1);
+            border-radius: 8px;
+            padding: 10px;
+            overflow-x: auto;
+        }
+        
+        #note-content-preview blockquote {
+            margin: 0;
+            padding: 0 1em;
+            color: #888;
+            border-left: 4px solid var(--border-color);
+        }
+        
+        #note-content-preview ul, #note-content-preview ol {
+            padding-left: 20px;
+        }
+        
+        .no-notes-message {
+            text-align: center;
+            color: #888;
+            margin-top: 50px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><a href="index.html">Foync's Blog</a></h1>
+            <button id="auth-button" class="auth-button">登录</button>
+        </header>
+        <main class="notes-grid">
+            <aside class="card notes-list-card">
+                <div class="editor-header">
+                    <h2>我的笔记</h2>
+                    <button id="new-note-btn">新建笔记</button>
+                </div>
+                <div id="notes-list">
+                    </div>
+            </aside>
+            <section class="card note-editor-card">
+                <div class="editor-header">
+                    <input type="text" id="note-title-input" placeholder="笔记标题" />
+                    <div>
+                        <button id="toggle-view-btn">预览</button>
+                        <button id="save-note-btn">保存</button>
+                        <button id="delete-note-btn" class="hidden">删除</button>
+                    </div>
+                </div>
+                <div id="editor-view">
+                    <div class="editor-controls">
+                        <select id="font-size-select">
+                            <option value="16px">字号</option>
+                            <option value="12px">小</option>
+                            <option value="16px">中</option>
+                            <option value="20px">大</option>
+                            <option value="24px">特大</option>
+                        </select>
+                        <button id="bold-btn" class="editor-btn"><b>B</b></button>
+                        <button id="italic-btn" class="editor-btn"><i>I</i></button>
+                        <button id="underline-btn" class="editor-btn"><u>U</u></button>
+                    </div>
+                    <textarea id="editor-content" placeholder="在此输入你的笔记内容..."></textarea>
+                </div>
+                <div id="note-content-preview" class="hidden card"></div>
+            </section>
+        </main>
+        <footer>
+            <p>&copy; 2025 Foync</p>
+        </footer>
+    </div>
+    <div class="theme-switcher-container">
+        <button class="theme-switcher-toggle">
+            <svg viewBox="0 0 24 24" fill="currentColor" style="width: 24px; height: 24px;">
+                <path d="M12 3a9 9 0 0 1 9 9 9 9 0 0 1-9 9 9 9 0 0 1-9-9 9 9 0 0 1 9-9m0 2a7 7 0 0 0-7 7 7 7 0 0 0 7 7 7 7 0 0 0 7-7 7 7 0 0 0-7-7zM12 7v2a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1zm4 0v2a1 1 0 0 1-1 1h-2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1zm-8 4v2a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-2a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1zm8 0v2a1 1 0 0 1-1 1h-2a1 1 0 0 1-1-1v-2a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1zm-4 4v2a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1v-2a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1zm4 0v2a1 1 0 0 1-1 1h-2a1 1 0 0 1-1-1v-2a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1z"/>
+            </svg>
+        </button>
+        <div class="theme-switcher-options">
+            <button data-theme="system">适配系统</button>
+            <button data-theme="light">浅色模式</button>
+            <button data-theme="dark">深色模式</button>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

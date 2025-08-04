@@ -1,11 +1,28 @@
 document.addEventListener('DOMContentLoaded', () => {
     const currentPage = window.location.pathname.split('/').pop();
     const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
-    const restrictedPages = ['jump.html', 'rss.html'];
+    const restrictedPages = ['jump.html', 'rss.html', 'notes.html'];
 
     if (restrictedPages.includes(currentPage) && !isLoggedIn) {
         window.location.href = 'login.html';
         return;
+    }
+    
+    // 动态显示登录/退出登录按钮
+    const authButton = document.getElementById('auth-button');
+    if (authButton) {
+        if (isLoggedIn) {
+            authButton.textContent = '退出登录';
+            authButton.addEventListener('click', () => {
+                localStorage.removeItem('isLoggedIn');
+                window.location.href = 'login.html';
+            });
+        } else {
+            authButton.textContent = '登录';
+            authButton.addEventListener('click', () => {
+                window.location.href = 'login.html';
+            });
+        }
     }
 
     const htmlElement = document.documentElement;
@@ -18,9 +35,18 @@ document.addEventListener('DOMContentLoaded', () => {
             htmlElement.dataset.theme = theme;
         }
         localStorage.setItem('theme', theme);
+        
+        // 动态调整文本颜色 RGB 变量
+        if (theme === 'dark') {
+            htmlElement.style.setProperty('--text-color-rgb', '224, 224, 224');
+        } else if (theme === 'colorful') {
+            htmlElement.style.setProperty('--text-color-rgb', '51, 51, 51');
+        } else {
+            htmlElement.style.setProperty('--text-color-rgb', '18, 18, 18');
+        }
     }
 
-    const savedTheme = localStorage.getItem('theme') || 'system';
+    const savedTheme = localStorage.getItem('theme') || 'colorful'; // 修改此处：将默认主题设为 'colorful'
     applyTheme(savedTheme);
 
     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
@@ -64,6 +90,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // ===================================
+    //  网址跳转功能
+    // ===================================
     const urlInput = document.getElementById('url-input');
     const jumpButton = document.getElementById('jump-button');
     if (jumpButton) {
@@ -88,6 +117,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // ===================================
+    //  RSS 阅读器功能
+    // ===================================
     const rssUrlInput = document.getElementById('rss-url-input');
     const subscribeButton = document.getElementById('subscribe-button');
     const feedContainer = document.getElementById('rss-feed-container');
@@ -289,60 +321,209 @@ document.addEventListener('DOMContentLoaded', () => {
                     const rssUrl = rssUrlInput.value.trim();
                     if (rssUrl) {
                         fetchRssFeed(rssUrl);
+                    } else {
+                        alert('请输入 RSS 订阅源地址。');
                     }
                 }
             });
         }
 
-        document.addEventListener('click', (event) => {
-            if (event.target.classList.contains('read-saved-rss-btn')) {
-                const url = event.target.dataset.url;
-                fetchRssFeed(url);
-            }
-            if (event.target.classList.contains('delete-rss-btn')) {
-                const url = event.target.dataset.url;
-                if (confirm(`确定要删除此订阅源吗？`)) {
-                    deleteRssFeed(url);
+        if (savedRssListContainer) {
+            savedRssListContainer.addEventListener('click', async (event) => {
+                const target = event.target;
+                const url = target.dataset.url;
+                if (!url) return;
+
+                if (target.classList.contains('read-saved-rss-btn')) {
+                    fetchRssFeed(url);
+                } else if (target.classList.contains('delete-rss-btn')) {
+                    if (confirm('确定要删除此订阅吗？')) {
+                        deleteRssFeed(url);
+                    }
+                } else if (target.classList.contains('edit-rss-btn')) {
+                    const newTitle = prompt('请输入新的订阅名称：', target.closest('.saved-rss-item').querySelector('.feed-title').textContent);
+                    if (newTitle !== null && newTitle.trim() !== '') {
+                        updateRssFeedTitle(url, newTitle);
+                    }
                 }
-            }
-            if (event.target.classList.contains('edit-rss-btn')) {
-                const url = event.target.dataset.url;
-                const newTitle = prompt('请输入新的标题：');
-                if (newTitle !== null && newTitle.trim() !== '') {
-                    updateRssFeedTitle(url, newTitle.trim());
-                } else if (newTitle !== null) {
-                    alert('标题不能为空。');
-                }
-            }
-        });
+            });
+        }
     }
 
-    const usernameInput = document.getElementById('username');
-    const passwordInput = document.getElementById('password');
-    const loginButton = document.getElementById('login-button');
-    const errorMessage = document.getElementById('error-message');
+    // ===================================
+    //  播客详情页面
+    // ===================================
+    const podcastContainer = document.getElementById('podcast-container');
+    if (podcastContainer) {
+        const urlParams = new URLSearchParams(window.location.search);
+        const audioUrl = urlParams.get('audioUrl');
+        const title = urlParams.get('title');
+        const description = urlParams.get('description');
 
-    if (loginButton) {
-        loginButton.addEventListener('click', () => {
-            const username = usernameInput.value.trim().toLowerCase();
-            const password = passwordInput.value.trim().toLowerCase();
+        const podcastDetail = document.getElementById('podcast-detail');
+        if (podcastDetail && audioUrl && title) {
+            podcastDetail.innerHTML = `
+                <h2>${title}</h2>
+                <audio controls class="audio-player">
+                    <source src="${audioUrl}" type="audio/mpeg">
+                    你的浏览器不支持音频播放。
+                </audio>
+                <div class="podcast-description">${description || ''}</div>
+            `;
+        } else {
+            if (podcastDetail) {
+                podcastDetail.innerHTML = '<p>未找到播客信息。</p>';
+            }
+        }
+    }
 
-            if (username === 'foync' && password === '090420') {
-                localStorage.setItem('isLoggedIn', 'true');
-                alert('登录成功！');
-                window.location.href = 'index.html';
+    // ===================================
+    //  笔记功能
+    // ===================================
+    const newNoteBtn = document.getElementById('new-note-btn');
+    const notesList = document.getElementById('notes-list');
+    const noteTitleInput = document.getElementById('note-title-input');
+    const editorContent = document.getElementById('editor-content');
+    const saveNoteBtn = document.getElementById('save-note-btn');
+    const deleteNoteBtn = document.getElementById('delete-note-btn');
+    const toggleViewBtn = document.getElementById('toggle-view-btn');
+    const noteContentPreview = document.getElementById('note-content-preview');
+
+    let currentNoteId = null;
+
+    if (newNoteBtn) {
+        function renderNotesList() {
+            notesList.innerHTML = '';
+            const notes = JSON.parse(localStorage.getItem('notes')) || [];
+            if (notes.length === 0) {
+                notesList.innerHTML = '<p class="no-notes-message">暂无笔记</p>';
+                return;
+            }
+
+            notes.forEach(note => {
+                const noteItem = document.createElement('div');
+                noteItem.classList.add('notes-list-item');
+                noteItem.dataset.id = note.id;
+                noteItem.innerHTML = `
+                    <h4>${note.title || '无标题笔记'}</h4>
+                `;
+                noteItem.addEventListener('click', () => {
+                    loadNote(note.id);
+                });
+                notesList.appendChild(noteItem);
+            });
+
+            // 恢复选中状态
+            if (currentNoteId) {
+                const activeItem = document.querySelector(`.notes-list-item[data-id='${currentNoteId}']`);
+                if (activeItem) {
+                    activeItem.classList.add('active');
+                }
+            }
+        }
+
+        function loadNote(id) {
+            const notes = JSON.parse(localStorage.getItem('notes')) || [];
+            const note = notes.find(n => n.id === id);
+
+            if (note) {
+                currentNoteId = note.id;
+                noteTitleInput.value = note.title;
+                editorContent.value = note.content;
+                deleteNoteBtn.classList.remove('hidden');
+
+                document.querySelectorAll('.notes-list-item').forEach(item => item.classList.remove('active'));
+                document.querySelector(`.notes-list-item[data-id='${id}']`).classList.add('active');
+            }
+        }
+
+        function saveNote() {
+            const notes = JSON.parse(localStorage.getItem('notes')) || [];
+            const title = noteTitleInput.value.trim() || '无标题笔记';
+            const content = editorContent.value.trim();
+
+            if (!content) {
+                alert('笔记内容不能为空！');
+                return;
+            }
+
+            if (currentNoteId) {
+                const noteIndex = notes.findIndex(n => n.id === currentNoteId);
+                if (noteIndex > -1) {
+                    notes[noteIndex].title = title;
+                    notes[noteIndex].content = content;
+                    notes[noteIndex].updatedAt = new Date().toISOString();
+                }
             } else {
-                errorMessage.style.display = 'block';
-                alert('请检查账号或密码并重试。');
+                const newNote = {
+                    id: Date.now().toString(),
+                    title: title,
+                    content: content,
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString(),
+                };
+                notes.push(newNote);
+                currentNoteId = newNote.id;
             }
-        });
-    }
 
-    const logoutButton = document.getElementById('logout-button');
-    if (logoutButton) {
-        logoutButton.addEventListener('click', () => {
-            localStorage.removeItem('isLoggedIn');
-            window.location.href = 'login.html';
+            localStorage.setItem('notes', JSON.stringify(notes));
+            renderNotesList();
+            alert('笔记已保存！');
+        }
+
+        function deleteNote() {
+            if (!currentNoteId) return;
+
+            if (confirm('确定要删除此笔记吗？')) {
+                let notes = JSON.parse(localStorage.getItem('notes')) || [];
+                notes = notes.filter(n => n.id !== currentNoteId);
+                localStorage.setItem('notes', JSON.stringify(notes));
+                alert('笔记已删除。');
+                newNote();
+                renderNotesList();
+            }
+        }
+
+        function newNote() {
+            currentNoteId = null;
+            noteTitleInput.value = '';
+            editorContent.value = '';
+            deleteNoteBtn.classList.add('hidden');
+            document.querySelectorAll('.notes-list-item').forEach(item => item.classList.remove('active'));
+        }
+
+        function toggleView() {
+            if (toggleViewBtn.textContent === '预览') {
+                noteContentPreview.innerHTML = marked.parse(editorContent.value);
+                document.getElementById('editor-view').classList.add('hidden');
+                noteContentPreview.classList.remove('hidden');
+                toggleViewBtn.textContent = '编辑';
+            } else {
+                noteContentPreview.classList.add('hidden');
+                document.getElementById('editor-view').classList.remove('hidden');
+                toggleViewBtn.textContent = '预览';
+            }
+        }
+
+        newNoteBtn.addEventListener('click', newNote);
+        saveNoteBtn.addEventListener('click', saveNote);
+        deleteNoteBtn.addEventListener('click', deleteNote);
+        toggleViewBtn.addEventListener('click', toggleView);
+
+        // 绑定富文本控制按钮
+        document.getElementById('bold-btn').addEventListener('click', () => {
+            document.execCommand('bold', false, null);
         });
+        document.getElementById('italic-btn').addEventListener('click', () => {
+            document.execCommand('italic', false, null);
+        });
+        document.getElementById('underline-btn').addEventListener('click', () => {
+            document.execCommand('underline', false, null);
+        });
+        document.getElementById('font-size-select').addEventListener('change', (e) => {
+            document.execCommand('fontSize', false, e.target.value);
+        });
+
+        renderNotesList();
     }
 });

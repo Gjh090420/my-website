@@ -10,7 +10,6 @@
     --button-bg-color-light: #222222;
     --button-text-color-light: #ffffff;
     --button-hover-bg-light: #444444;
-    --text-color-rgb: 18, 18, 18;
 
     /* 深色模式颜色 */
     --bg-color-dark: #121212;
@@ -22,14 +21,39 @@
     --button-bg-color-dark: #f0f0f0;
     --button-text-color-dark: #121212;
     --button-hover-bg-dark: #cccccc;
-    --text-color-rgb: 224, 224, 224;
+
+    /* 彩色模式颜色 (默认) */
+    --bg-color-colorful: linear-gradient(135deg, #FF6B6B, #FFC94A, #77C4A3, #4C9EAD, #6D5B9A, #A64E8E);
+    --bg-size-colorful: 400% 400%;
+    --bg-animation-colorful: flowBackground 25s ease infinite;
+    --text-color-colorful: #333333;
+    --card-bg-color-colorful: 255, 255, 255;
+    --border-color-colorful: rgba(255, 255, 255, 0.3);
+    --input-bg-color-colorful: rgba(255, 255, 255, 0.4);
+    --button-bg-color-colorful: #333333;
+    --button-text-color-colorful: #ffffff;
+    --button-hover-bg-colorful: #555555;
+
+    /* 默认使用彩色模式变量 */
+    --bg-color: var(--bg-color-colorful);
+    --bg-size: var(--bg-size-colorful);
+    --bg-animation: var(--bg-animation-colorful);
+    --text-color: var(--text-color-colorful);
+    --card-bg-color-rgb: var(--card-bg-color-colorful);
+    --border-color: var(--border-color-colorful);
+    --input-bg-color: var(--input-bg-color-colorful);
+    --button-bg-color: var(--button-bg-color-colorful);
+    --button-text-color: var(--button-text-color-colorful);
+    --button-hover-bg: var(--button-hover-bg-colorful);
 }
 
 /* 根据 data-theme 属性应用颜色 */
 html[data-theme='light'] {
     --bg-color: var(--bg-color-light);
+    --bg-size: auto;
+    --bg-animation: none;
     --text-color: var(--text-color-light);
-    --card-bg-color: var(--card-bg-color-light);
+    --card-bg-color-rgb: 255, 255, 255;
     --border-color: var(--border-color-light);
     --input-bg-color: var(--input-bg-color-light);
     --button-bg-color: var(--button-bg-color-light);
@@ -39,8 +63,10 @@ html[data-theme='light'] {
 
 html[data-theme='dark'] {
     --bg-color: var(--bg-color-dark);
+    --bg-size: auto;
+    --bg-animation: none;
     --text-color: var(--text-color-dark);
-    --card-bg-color: var(--card-bg-color-dark);
+    --card-bg-color-rgb: 30, 30, 30;
     --border-color: var(--border-color-dark);
     --input-bg-color: var(--input-bg-color-dark);
     --button-bg-color: var(--button-bg-color-dark);
@@ -51,25 +77,24 @@ html[data-theme='dark'] {
 body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     margin: 0;
-    background-color: var(--bg-color);
+    background: var(--bg-color); /* 统一使用 background */
+    background-size: var(--bg-size);
+    animation: var(--bg-animation);
     color: var(--text-color);
-    transition: background-color 0.5s, color 0.5s;
+    transition: all 0.5s ease-in-out;
     min-height: 100vh;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
-
-    /* 动态渐变背景 - 液态效果 */
-    background-image: linear-gradient(135deg, color(display-p3 0.659 0.753 1), color(display-p3 0.247 0.169 0.588), color(display-p3 1 0.494 0.373), color(display-p3 0.984 0.706 0.486));
-    background-size: 400% 400%;
-    animation: flowBackground 20s ease infinite;
 }
 
 @keyframes flowBackground {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
+    0% { background-position: 0% 0%; }
+    25% { background-position: 100% 0%; }
+    50% { background-position: 100% 100%; }
+    75% { background-position: 0% 100%; }
+    100% { background-position: 0% 0%; }
 }
 
 .container {
@@ -94,7 +119,7 @@ body {
 }
 
 /* 输入框的液态效果 */
-select, input[type="url"], input[type="text"], input[type="password"] {
+select, input[type="url"], input[type="text"], input[type="password"], textarea {
     background-color: var(--input-bg-color);
     color: var(--text-color);
     border: 1px solid var(--border-color);
@@ -103,14 +128,17 @@ select, input[type="url"], input[type="text"], input[type="password"] {
     font-size: 16px;
     transition: background-color 0.3s, border-color 0.3s, box-shadow 0.3s;
     outline: none;
+    font-family: inherit;
+    box-sizing: border-box;
+    width: 100%;
 }
-input:focus {
+input:focus, textarea:focus {
     border-color: color(display-p3 0.4 0.6 1);
     box-shadow: 0 0 0 3px color(display-p3 0.4 0.6 1 / 0.2);
 }
 
 /* 按钮的液态玻璃样式 */
-button, .back-button {
+button, .back-button, .auth-button {
     background: rgba(var(--card-bg-color-rgb), 0.2);
     border: 1px solid var(--border-color);
     padding: 12px 24px;
@@ -126,13 +154,13 @@ button, .back-button {
     box-shadow: 0 4px 12px 0 rgba(0, 0, 0, 0.1);
 }
 
-button:hover, .back-button:hover {
+button:hover, .back-button:hover, .auth-button:hover {
     background: rgba(var(--card-bg-color-rgb), 0.4);
     transform: translateY(-2px);
     box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
 }
 
-button:active, .back-button:active {
+button:active, .back-button:active, .auth-button:active {
     transform: translateY(0);
     box-shadow: none;
 }
@@ -163,6 +191,7 @@ header h1 a:hover {
 .input-group {
     display: flex;
     gap: 10px;
+    width: 100%; /* 确保输入组也占满宽度 */
 }
 
 .input-group input {
@@ -376,7 +405,7 @@ footer {
 /* 主页模块化布局 */
 .module-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr 1fr 1fr;
     gap: 20px;
     padding: 20px;
 }
@@ -563,4 +592,103 @@ footer {
 .back-button:active {
     transform: translateY(0);
     box-shadow: none;
+}
+
+/* 笔记功能样式 */
+.notes-grid {
+    display: grid;
+    grid-template-columns: 1fr 3fr;
+    gap: 20px;
+    min-height: 70vh;
+}
+
+.notes-list-card {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 20px;
+}
+
+.notes-list-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+    background-color: rgba(var(--text-color-rgb), 0.05);
+}
+
+.notes-list-item:hover {
+    background-color: rgba(var(--text-color-rgb), 0.1);
+    transform: translateX(5px);
+}
+.notes-list-item.active {
+    background-color: rgba(var(--text-color-rgb), 0.2);
+}
+
+.notes-list-item h4 {
+    margin: 0;
+    flex-grow: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.note-editor-card {
+    display: flex;
+    flex-direction: column;
+}
+
+.editor-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+#note-title-input {
+    flex-grow: 1;
+    border: none;
+    background: transparent;
+    font-size: 1.5em;
+    font-weight: bold;
+    padding: 5px;
+    color: var(--text-color);
+    border-bottom: 1px solid var(--border-color);
+    box-sizing: border-box;
+    width: 100%;
+}
+#note-title-input:focus {
+    outline: none;
+    border-bottom: 1px solid color(display-p3 0.4 0.6 1);
+}
+
+.editor-controls {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+    width: 100%;
+}
+
+#editor-content {
+    flex-grow: 1;
+    min-height: 50vh;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 15px;
+    background-color: var(--input-bg-color);
+    font-family: inherit;
+    color: var(--text-color);
+    resize: vertical;
+    box-sizing: border-box;
+    width: 100%;
+}
+
+.no-notes-message {
+    text-align: center;
+    color: #888;
+    margin-top: 50px;
 }
