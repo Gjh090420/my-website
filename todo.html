@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>待办事项 - Foync's Blog</title>
+    <meta http-equiv="Content-Security-Policy" content="
+        default-src 'self';
+        style-src 'self' 'unsafe-inline';
+    ">
     <link rel="stylesheet" href="style.css">
     <style>
         .todo-container {
@@ -40,6 +44,9 @@
             display: flex;
             flex-direction: column;
             gap: 10px;
+            list-style: none;
+            padding: 0;
+            margin: 0;
         }
 
         .todo-list-item {
@@ -95,12 +102,6 @@
     <div class="container">
         <header>
             <h1><a href="index.html">Foync's Blog</a></h1>
-            <nav class="nav-links">
-                <a href="notes.html">笔记</a>
-                <a href="rss.html">RSS</a>
-                <a href="jump.html">网址跳转</a>
-                <a href="todo.html">待办</a>
-            </nav>
             <button id="auth-button" class="auth-button">登录</button>
         </header>
         <main>
@@ -115,7 +116,7 @@
             </section>
         </main>
         <footer>
-            <p>&copy; 2025 Foync</p>
+            <p>&copy; 2024 Foync. All rights reserved.</p>
         </footer>
     </div>
     <script src="script.js"></script>
