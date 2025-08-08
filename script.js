@@ -4,7 +4,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // ===================================
     const currentPage = window.location.pathname.split('/').pop();
     const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
-    const restrictedPages = ['jump.html', 'rss.html', 'notes.html', 'podcast.html'];
+    const restrictedPages = ['jump.html', 'rss.html', 'notes.html', 'podcast.html', 'todo.html'];
 
     // 如果未登录且访问受限页面，则跳转到登录页
     if (restrictedPages.includes(currentPage) && !isLoggedIn) {
@@ -38,11 +38,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (loginButton) {
         loginButton.addEventListener('click', (e) => {
-            e.preventDefault(); // 防止表单默认提交行为
+            e.preventDefault();
             const username = usernameInput.value.trim().toLowerCase();
             const password = passwordInput.value.trim();
 
-            // 修正：用户名转小写，密码保持原样
             if (username === 'foync' && password === '090420') {
                 localStorage.setItem('isLoggedIn', 'true');
                 window.location.href = 'index.html';
@@ -69,8 +68,7 @@ document.addEventListener('DOMContentLoaded', () => {
             htmlElement.dataset.theme = theme;
         }
         localStorage.setItem('theme', theme);
-        
-        // 动态调整文本颜色 RGB 变量
+
         if (htmlElement.dataset.theme === 'dark') {
             htmlElement.style.setProperty('--text-color-rgb', '224, 224, 224');
         } else if (htmlElement.dataset.theme === 'colorful') {
@@ -80,7 +78,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    const savedTheme = localStorage.getItem('theme') || 'system';
+    const savedTheme = localStorage.getItem('theme') || 'colorful';
     applyTheme(savedTheme);
 
     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
@@ -188,121 +186,103 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         renderJumps();
     }
-    
+
     // ===================================
     // RSS 阅读器功能
     // ===================================
-    const rssUrlInput = document.getElementById('rss-url-input');
-    const subscribeBtn = document.getElementById('subscribe-button');
+    const rssUrlInput = document.getElementById('rss-url');
+    const addRssBtn = document.getElementById('add-rss-btn');
     const rssFeedContainer = document.getElementById('rss-feed-container');
-    const rssLoading = document.getElementById('rss-loading');
 
     function saveRssFeeds(feeds) {
         localStorage.setItem('rssFeeds', JSON.stringify(feeds));
     }
 
-    function getRssFeeds() {
-        return JSON.parse(localStorage.getItem('rssFeeds')) || [];
-    }
-    
-    async function fetchRssFeed(url, container) {
-        container.innerHTML = '<p>加载中...</p>';
-        try {
-            const CORS_PROXY = 'https://api.allorigins.win/raw?url=';
-            const response = await fetch(`${CORS_PROXY}${encodeURIComponent(url)}`);
-            const text = await response.text();
-            
-            const parser = new DOMParser();
-            const xmlDoc = parser.parseFromString(text, "text/xml");
-            
-            const items = xmlDoc.querySelectorAll('item');
-            let feedContent = '';
-            
-            items.forEach(item => {
-                const title = item.querySelector('title')?.textContent || '无标题';
-                const link = item.querySelector('link')?.textContent || '#';
-                const description = item.querySelector('description')?.textContent || '无描述';
-                
-                feedContent += `
-                    <div class="rss-feed-item card">
-                        <h4><a href="${link}" target="_blank">${title}</a></h4>
-                        <p>${description}</p>
-                    </div>
-                `;
-            });
-            container.innerHTML = feedContent;
-        } catch (error) {
-            console.error('获取 RSS 失败:', error);
-            container.innerHTML = '<p>加载 RSS 失败。请检查地址是否正确。</p>';
-        }
-    }
-
-    function renderRssFeeds() {
+    function renderRssFeedList() {
         if (!rssFeedContainer) return;
-        const feeds = getRssFeeds();
+        const feeds = JSON.parse(localStorage.getItem('rssFeeds')) || [];
         rssFeedContainer.innerHTML = '';
         feeds.forEach(feed => {
-            const feedCard = document.createElement('div');
-            feedCard.className = 'rss-card card';
-            feedCard.innerHTML = `
-                <div class="rss-card-header">
-                    <h3>${feed.title || feed.url}</h3>
-                    <div class="rss-actions">
-                        <button class="delete-rss-btn" data-url="${feed.url}">删除</button>
-                    </div>
+            const rssItem = document.createElement('div');
+            rssItem.className = 'rss-item';
+            rssItem.innerHTML = `
+                <div class="rss-item-info">
+                    <span class="rss-item-title">${feed.title || feed.url}</span>
+                    <button class="rss-delete-btn">删除</button>
                 </div>
                 <div class="rss-feed-content" data-url="${feed.url}">加载中...</div>
             `;
-            rssFeedContainer.appendChild(feedCard);
-            const contentContainer = feedCard.querySelector('.rss-feed-content');
-            fetchRssFeed(feed.url, contentContainer);
+            rssFeedContainer.appendChild(rssItem);
+            fetchRssFeed(feed.url, rssItem.querySelector('.rss-feed-content'));
         });
     }
 
-    if (subscribeBtn) {
-        subscribeBtn.addEventListener('click', () => {
-            const url = rssUrlInput.value.trim();
+    async function fetchRssFeed(url, container) {
+        try {
+            const response = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(url)}`);
+            const data = await response.json();
+            if (data.status === 'ok' && data.items) {
+                const feedContent = data.items.map(item => {
+                    const cleanDescription = DOMPurify.sanitize(item.description);
+                    return `
+                        <a href="${item.link}" target="_blank" class="rss-item-link">
+                            <h4>${item.title}</h4>
+                            <p>${cleanDescription}</p>
+                        </a>
+                    `;
+                }).join('');
+                container.innerHTML = feedContent;
+            } else {
+                container.textContent = '加载 RSS 失败。';
+            }
+        } catch (error) {
+            console.error('获取 RSS 失败:', error);
+            container.textContent = '加载 RSS 失败。';
+        }
+    }
+
+    if (addRssBtn) {
+        addRssBtn.addEventListener('click', () => {
+            const url = rssUrlInput.value;
             if (url) {
-                const feeds = getRssFeeds();
-                // 检查是否已存在
-                if (!feeds.some(feed => feed.url === url)) {
-                    feeds.push({ url: url, title: url });
-                    saveRssFeeds(feeds);
-                    renderRssFeeds();
-                    rssUrlInput.value = '';
-                } else {
-                    alert('该订阅源已存在！');
-                }
+                const feeds = JSON.parse(localStorage.getItem('rssFeeds')) || [];
+                feeds.push({ url: url, title: url });
+                saveRssFeeds(feeds);
+                renderRssFeedList();
+                rssUrlInput.value = '';
             }
         });
     }
 
     if (rssFeedContainer) {
         rssFeedContainer.addEventListener('click', (e) => {
-            if (e.target.classList.contains('delete-rss-btn')) {
-                const urlToDelete = e.target.dataset.url;
-                const feeds = getRssFeeds();
+            if (e.target.classList.contains('rss-delete-btn')) {
+                const rssItem = e.target.closest('.rss-item');
+                const urlToDelete = rssItem.querySelector('.rss-feed-content').dataset.url;
+                const feeds = JSON.parse(localStorage.getItem('rssFeeds')) || [];
                 const updatedFeeds = feeds.filter(feed => feed.url !== urlToDelete);
                 saveRssFeeds(updatedFeeds);
-                renderRssFeeds();
+                rssItem.remove();
             }
         });
-        renderRssFeeds();
+        renderRssFeedList();
     }
-    
+
     // ===================================
     // 笔记功能
     // ===================================
     const addNoteBtn = document.getElementById('add-note-btn');
     const notesListContainer = document.getElementById('notes-list-container');
-    const noteEditorContainer = document.getElementById('note-editor-container');
-    
-    function getNotes() {
-        return JSON.parse(localStorage.getItem('notes')) || [];
-    }
+    const noteDisplay = document.getElementById('note-display');
+
+    let currentNoteId = null;
 
     function saveNotes(notes) {
         localStorage.setItem('notes', JSON.stringify(notes));
+    }
+
+    function getNotes() {
+        return JSON.parse(localStorage.getItem('notes')) || [];
     }
 
     function renderNotesList() {
@@ -322,40 +302,34 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function displayNoteContent(note) {
-        if (!noteEditorContainer) return;
-        
-        noteEditorContainer.innerHTML = `
-            <div class="note-edit-area card">
-                <input type="text" id="note-title-input" placeholder="笔记标题" value="${note.title}">
-                <div class="editor-toolbar">
-                    <button id="bold-btn"><b>B</b></button>
-                    <button id="italic-btn"><i>I</i></button>
-                    <button id="underline-btn"><u>U</u></button>
-                </div>
+        if (!noteDisplay) return;
+        noteDisplay.innerHTML = `
+            <h2>${note.title}</h2>
+            <div class="note-edit-area">
                 <textarea id="note-editor" class="note-textarea">${note.content}</textarea>
                 <div class="note-actions">
                     <button id="save-note-btn" class="login-button">保存</button>
                 </div>
             </div>
         `;
-        
         const noteEditor = document.getElementById('note-editor');
-        const noteTitleInput = document.getElementById('note-title-input');
         const saveNoteBtn = document.getElementById('save-note-btn');
-        
-        noteEditor.focus();
-        
-        saveNoteBtn.addEventListener('click', () => {
-            note.content = noteEditor.value;
-            note.title = noteTitleInput.value.trim() || '无标题';
-            const notes = getNotes();
-            const noteIndex = notes.findIndex(n => n.id === note.id);
-            if (noteIndex !== -1) {
-                notes[noteIndex] = note;
-                saveNotes(notes);
-                renderNotesList();
-            }
-        });
+        if (noteEditor) {
+            noteEditor.focus();
+        }
+        if (saveNoteBtn) {
+            saveNoteBtn.addEventListener('click', () => {
+                note.content = noteEditor.value;
+                note.title = noteEditor.value.split('\n')[0] || '无标题';
+                const notes = getNotes();
+                const noteIndex = notes.findIndex(n => n.id === note.id);
+                if (noteIndex !== -1) {
+                    notes[noteIndex] = note;
+                    saveNotes(notes);
+                    renderNotesList();
+                }
+            });
+        }
     }
 
     if (addNoteBtn) {
@@ -370,37 +344,41 @@ document.addEventListener('DOMContentLoaded', () => {
             saveNotes(notes);
             renderNotesList();
             displayNoteContent(newNote);
+            currentNoteId = newNote.id;
         });
     }
 
     if (notesListContainer) {
         notesListContainer.addEventListener('click', (e) => {
+            const noteItem = e.target.closest('.notes-list-item');
             if (e.target.classList.contains('delete-note-btn')) {
                 e.stopPropagation();
-                const noteItem = e.target.closest('.notes-list-item');
                 const noteId = parseInt(noteItem.dataset.noteId);
                 const notes = getNotes();
                 const updatedNotes = notes.filter(n => n.id !== noteId);
                 saveNotes(updatedNotes);
                 renderNotesList();
-                if (noteEditorContainer.querySelector('[data-note-id="' + noteId + '"]')) {
-                    noteEditorContainer.innerHTML = '<p>请在左侧选择一篇笔记进行查看或编辑。</p>';
+                if (currentNoteId === noteId) {
+                    noteDisplay.innerHTML = '<p>请在左侧选择一篇笔记进行查看或编辑。</p>';
+                    currentNoteId = null;
                 }
-            } else {
-                const noteItem = e.target.closest('.notes-list-item');
-                if (noteItem) {
-                    const noteId = parseInt(noteItem.dataset.noteId);
-                    const notes = getNotes();
-                    const note = notes.find(n => n.id === noteId);
-                    if (note) {
-                        displayNoteContent(note);
-                    }
+            } else if (noteItem) {
+                const noteId = parseInt(noteItem.dataset.noteId);
+                const notes = getNotes();
+                const note = notes.find(n => n.id === noteId);
+                if (note) {
+                    displayNoteContent(note);
+                    currentNoteId = noteId;
+                    notesListContainer.querySelectorAll('.notes-list-item').forEach(item => {
+                        item.classList.remove('active');
+                    });
+                    noteItem.classList.add('active');
                 }
             }
         });
         renderNotesList();
     }
-    
+
     // ===================================
     // 播客功能
     // ===================================
@@ -411,7 +389,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const description = urlParams.get('description');
 
     if (podcastDetailContainer && audioUrl && title && description) {
-        const cleanDescription = decodeURIComponent(description);
+        const cleanDescription = DOMPurify.sanitize(decodeURIComponent(description));
         podcastDetailContainer.innerHTML = `
             <h2>${decodeURIComponent(title)}</h2>
             <audio id="podcast-player" controls class="audio-player">
@@ -422,5 +400,80 @@ document.addEventListener('DOMContentLoaded', () => {
                 ${cleanDescription}
             </div>
         `;
+    }
+
+    // ===================================
+    // 待办事项功能
+    // ===================================
+    const todoInput = document.getElementById('todo-input');
+    const addTodoBtn = document.getElementById('add-todo-btn');
+    const todoList = document.getElementById('todo-list');
+
+    function renderTodoList() {
+        if (!todoList) return;
+        todoList.innerHTML = '';
+        const todos = JSON.parse(localStorage.getItem('todos')) || [];
+        todos.forEach(todo => {
+            const todoItem = document.createElement('li');
+            todoItem.className = `todo-list-item card ${todo.completed ? 'completed' : ''}`;
+            todoItem.innerHTML = `
+                <input type="checkbox" class="todo-checkbox" ${todo.completed ? 'checked' : ''} data-id="${todo.id}">
+                <span class="todo-text">${todo.text}</span>
+                <button class="todo-delete-btn" data-id="${todo.id}">删除</button>
+            `;
+            todoList.appendChild(todoItem);
+        });
+    }
+
+    function saveTodos(todos) {
+        localStorage.setItem('todos', JSON.stringify(todos));
+    }
+
+    if (addTodoBtn) {
+        addTodoBtn.addEventListener('click', () => {
+            const todoText = todoInput.value.trim();
+            if (todoText) {
+                const todos = JSON.parse(localStorage.getItem('todos')) || [];
+                const newTodo = {
+                    id: Date.now(),
+                    text: todoText,
+                    completed: false
+                };
+                todos.push(newTodo);
+                saveTodos(todos);
+                renderTodoList();
+                todoInput.value = '';
+            }
+        });
+
+        todoInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                addTodoBtn.click();
+            }
+        });
+    }
+
+    if (todoList) {
+        todoList.addEventListener('click', (e) => {
+            const id = parseInt(e.target.dataset.id);
+            let todos = JSON.parse(localStorage.getItem('todos')) || [];
+
+            if (e.target.classList.contains('todo-checkbox')) {
+                todos = todos.map(todo => {
+                    if (todo.id === id) {
+                        todo.completed = !todo.completed;
+                    }
+                    return todo;
+                });
+                saveTodos(todos);
+                renderTodoList();
+            } else if (e.target.classList.contains('todo-delete-btn')) {
+                todos = todos.filter(todo => todo.id !== id);
+                saveTodos(todos);
+                renderTodoList();
+            }
+        });
+
+        renderTodoList();
     }
 });
