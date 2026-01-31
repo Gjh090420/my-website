@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<body style="margin:0; background:#111; overflow:hidden;">
+    <canvas id="c"></canvas>
+    <script>
+        const canvas = document.getElementById('c');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        window.onmousemove = (e) => {
+            ctx.fillStyle = `hsl(${Math.random()*360}, 50%, 50%)`;
+            ctx.beginPath();
+            ctx.arc(e.x, e.y, 20, 0, Math.PI*2);
+            ctx.fill();
+        }
+        // 双击清屏
+        window.ondblclick = () => ctx.clearRect(0,0,canvas.width,canvas.height);
+    </script>
+</body>
+</html>

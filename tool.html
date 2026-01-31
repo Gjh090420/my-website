@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>Foync 工具箱</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-900 text-slate-200 p-6">
+    <div class="max-w-2xl mx-auto">
+        <h1 class="text-3xl font-bold mb-6 text-blue-400">🛠️ 个人工具箱</h1>
+        
+        <div class="bg-slate-800 p-4 rounded-lg mb-6">
+            <h2 class="text-xl mb-4">网页延迟检测</h2>
+            <input id="webUrl" type="text" placeholder="https://www.baidu.com" class="w-full p-2 bg-slate-700 rounded mb-4">
+            <button onclick="testWeb()" class="bg-blue-600 px-4 py-2 rounded">开始检测</button>
+            <p id="webRes" class="mt-2 text-yellow-500 font-mono"></p>
+        </div>
+
+        <div class="bg-slate-800 p-4 rounded-lg">
+            <h2 class="text-xl mb-4">随机密码生成</h2>
+            <button onclick="genPass()" class="bg-green-600 px-4 py-2 rounded">生成16位强密码</button>
+            <p id="passRes" class="mt-2 text-white font-mono break-all"></p>
+        </div>
+    </div>
+    <script>
+        async function testWeb() {
+            const url = document.getElementById('webUrl').value || 'https://www.baidu.com';
+            const start = Date.now();
+            document.getElementById('webRes').innerText = "检测中...";
+            try {
+                await fetch(url, { mode: 'no-cors', cache: 'no-cache' });
+                document.getElementById('webRes').innerText = `延迟: ${Date.now() - start}ms`;
+            } catch(e) { document.getElementById('webRes').innerText = "检测失败"; }
+        }
+        function genPass() {
+            const str = "ABCDEFGHJKMNPQRSTWXYZabcdefhijkmnprstwxyz2345678!@#$%^&*";
+            let p = "";
+            for(let i=0; i<16; i++) p += str.charAt(Math.floor(Math.random()*str.length));
+            document.getElementById('passRes').innerText = p;
+        }
+    </script>
+</body>
+</html>
