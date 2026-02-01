@@ -1,20 +1,55 @@
 <!DOCTYPE html>
 <html>
-<body style="margin:0; background:#111; overflow:hidden;">
-    <canvas id="c"></canvas>
+<head>
+    <meta charset="UTF-8">
+    <title>创意荧光空间</title>
+    <style>
+        body { margin:0; background:#000; overflow:hidden; cursor:crosshair; }
+        canvas { display: block; filter: contrast(1.2) brightness(1.2); } /* 增加清晰度 */
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
     <script>
-        const canvas = document.getElementById('c');
+        const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-        window.onmousemove = (e) => {
-            ctx.fillStyle = `hsl(${Math.random()*360}, 50%, 50%)`;
-            ctx.beginPath();
-            ctx.arc(e.x, e.y, 20, 0, Math.PI*2);
-            ctx.fill();
+        
+        function initCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            // 每次刷新/加载随机选一个荧光色
+            const neonColors = ['#CCFF00', '#00FF66', '#FF00FF', '#00FFFF', '#FF3300', '#FFFF00'];
+            const chosenColor = neonColors[Math.floor(Math.random() * neonColors.length)];
+            
+            ctx.strokeStyle = chosenColor;
+            ctx.lineWidth = 5; // 粗细适中
+            ctx.lineJoin = 'round';
+            ctx.lineCap = 'round';
+            ctx.shadowBlur = 10; // 荧光效果
+            ctx.shadowColor = chosenColor;
         }
-        // 双击清屏
-        window.ondblclick = () => ctx.clearRect(0,0,canvas.width,canvas.height);
+
+        initCanvas();
+        window.addEventListener('resize', initCanvas);
+
+        let drawing = false;
+
+        window.addEventListener('mousedown', () => { drawing = true; });
+        window.addEventListener('mouseup', () => { drawing = false; ctx.beginPath(); });
+        window.addEventListener('mousemove', (e) => {
+            if (!drawing) return;
+            ctx.lineTo(e.clientX, e.clientY);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(e.clientX, e.clientY);
+        });
+
+        // 按 ESC 清空画布
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+            }
+        });
     </script>
 </body>
 </html>
